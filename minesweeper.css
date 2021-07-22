@@ -1,0 +1,38 @@
+.hidden {
+    display: none;
+}
+
+button.boxHidden,
+button.boxFlag,
+button.boxContent {
+    width: 40px;
+    height: 40px;
+}
+
+.diffRap {
+    text-align: center;
+}
+
+button#reset {
+    width: 60px;
+    height: 60px;
+    font-size: 30px;
+    display: block;
+    margin: auto;
+}
+
+span#timer {
+    position: absolute;
+    top: 1px;
+    right: 2px;
+    font-size: 30px;
+}
+
+.mainRapper {
+    position: relative;
+    width: max-content;
+    margin: auto;
+    padding: 10px;
+    border: 2px solid red;
+    background-color: darkgray;
+}

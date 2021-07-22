@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Minesweeper</title>
+    <meta charset="utf-8" />
+    <meta name="Minesweeper" content="Minesweeper game" />
+</head>
+
+<link rel="stylesheet" href="minesweeper.css">
+
+<body onload="init()">
+    <div class="mainRapper">
+        <button id="reset" class="uiButton" onclick="init()">🙂</button> <span id="timer">0000</span>
+        <table id="mainBoard"></table>
+        <div class="diffRap">
+            <label for="difficulty">difficulty:</label>
+            <select name="difficulty" id="difficulty" onchange="changeDifficulty(this)">
+                <option value="1">BEGINNER</option>
+                <option value="2">MEDIUM</option>
+                <option value="3">EXPERT</option>
+            </select>
+        </div>
+    </div>
+</body>
+<script src="./minesweeper.js"></script>
+
+</html>
