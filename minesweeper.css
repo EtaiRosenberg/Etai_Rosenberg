@@ -36,3 +36,10 @@ span#timer {
     border: 2px solid red;
     background-color: darkgray;
 }
+
+span#lives {
+    position: absolute;
+    top: 1px;
+    left: 2px;
+    font-size: 20px;
+}

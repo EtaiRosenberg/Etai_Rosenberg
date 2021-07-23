@@ -15,6 +15,12 @@ var EXPERT = {
     numOfBombs: 30
 };
 
+var gLives = 0;
+var gFirstFlag = 0;
+var gBoard = [];
+var gFirstRow = -5;
+var gFirstCol = -5;
+var gFirstClick = 0;
 var BOMB = -1;
 var BOMBICON = '💣';
 var gBombFlagged = 0;
@@ -26,21 +32,20 @@ var gTimePointer = new Date();
 function createBoard() {
 
     var size = gDifficulty.size;
-    var board = [];
     for (var row = 0; row < size; row++) {
 
-        board.push([]);
+        gBoard.push([]);
         for (var col = 0; col < size; col++) {
 
-            board[row][col] = {
+            gBoard[row][col] = {
                 content: 0
             };
         }
     }
-    return board;
+    return gBoard;
 }
 
-function placeBombs(board) {
+function placeBombs() {
 
     var bombLoc = [];
     var size = gDifficulty.size;
@@ -53,40 +58,46 @@ function placeBombs(board) {
 
         randCol = Math.floor((Math.random() * size));
         randRow = Math.floor((Math.random() * size));
-        if (board[randRow][randCol].content != BOMB) {
+        if (gBoard[randRow][randCol].content != BOMB && !(randRow == gFirstRow && randCol == gFirstCol)) {
 
             bombLoc.push({
                 row: randRow,
                 col: randCol
             });
-            board[randRow][randCol].content = BOMB;
+            gBoard[randRow][randCol].content = BOMB;
             bombsReady++;
         }
     }
     return bombLoc
 }
 
-function drawBoard(board) {
+function drawBoard() {
 
-    var numOfRows = board.length;
-    var numOfCols = board[1].length;
+    var numOfRows = gBoard.length;
+    var numOfCols = gBoard[1].length;
     var htmlStr = '';
     for (var i = 0; i < numOfRows; i++) {
         htmlStr += '<tr>';
 
         for (var j = 0; j < numOfCols; j++) {
 
-            if (board[i][j].content == BOMB) {
+            if (gBoard[i][j].content == BOMB) {
 
-                htmlStr += `<td data-row="${i}" data-col="${j}"><button class="boxContent hidden bomb"> ${BOMBICON} </button>`
+                htmlStr += `<td id="cell-${[i]}-${[j]}" data-row="${[i]}" data-col="${[j]}"><button class="boxContent hidden bomb"> ${BOMBICON} </button>
+                <button class="boxHidden" onclick="reveal(this)" oncontextmenu="flag(event, this)"></button>`
+
+            } else if (i != gFirstRow || j != gFirstCol) {
+
+                htmlStr += `<td id="cell-${[i]}-${[j]}" data-row="${[i]}" data-col="${[j]}"><button class="boxContent hidden"> ${gBoard[i][j].content} </button>
+                <button class="boxHidden" onclick="reveal(this)" oncontextmenu="flag(event, this)"></button>`
 
             } else {
 
-                htmlStr += `<td data-row="${i}" data-col="${j}"><button class="boxContent hidden"> ${board[i][j].content} </button>`
+                htmlStr += `<td id="cell-${[i]}-${[j]}" data-row="${[i]}" data-col="${[j]}"><button class="boxContent"> ${gBoard[i][j].content} </button>
+                <button class="boxHidden hidden" onclick="reveal(this)" oncontextmenu="flag(event, this)"></button>`
 
             }
-            htmlStr += `<button class="boxFlag hidden" oncontextmenu ="unFlag(event, this)">🚩</button>
-            <button class="boxHidden" onclick="reveal(this)" oncontextmenu="flag(event, this)"></button></td>`
+            htmlStr += `<button class="boxFlag hidden" oncontextmenu ="unFlag(event, this)">🚩</button></td>`
         }
 
         htmlStr += '</tr>';
@@ -96,7 +107,7 @@ function drawBoard(board) {
     mainBoard.innerHTML = htmlStr;
 }
 
-function nearBomb(board, bombLoc) {
+function nearBomb(bombLoc) {
 
     var rowCheck = 0;
     var colCheck = 0;
@@ -108,11 +119,11 @@ function nearBomb(board, bombLoc) {
 
                 rowCheck = bombLoc[i].row + r;
                 colCheck = bombLoc[i].col + c;
-                if (rowCheck >= 0 && rowCheck < board.length && colCheck >= 0 && colCheck < board.length) {
+                if (rowCheck >= 0 && rowCheck < gBoard.length && colCheck >= 0 && colCheck < gBoard.length) {
 
-                    if (board[rowCheck][colCheck].content != BOMB) {
+                    if (gBoard[rowCheck][colCheck].content != BOMB) {
 
-                        board[rowCheck][colCheck].content++
+                        gBoard[rowCheck][colCheck].content++
                     }
                 }
             }
@@ -121,6 +132,14 @@ function nearBomb(board, bombLoc) {
 }
 
 function flag(event, button) {
+
+    gFirstFlag++;
+    if (gFirstFlag === 1) {
+
+        gTimePointer = new Date();
+        gTimer = setInterval('runTimer()', 100);
+
+    }
 
     event.preventDefault();
     button.classList.add("hidden");
@@ -147,16 +166,43 @@ function unFlag(event, button) {
 
 function reveal(button) {
 
+    gFirstClick++;
+    gFirstFlag++;
+    var row = button.parentElement.getAttribute("data-row");
+    var col = button.parentElement.getAttribute("data-col");
     var content = button.parentElement.querySelector(".boxContent");
-    button.classList.add("hidden");
-    content.classList.remove("hidden");
 
-    if (content.classList.contains("bomb")) {
+    if (gFirstClick === 1) {
+
+        gTimePointer = new Date();
+        gTimer = setInterval('runTimer()', 100);
+        gFirstRow = row;
+        gFirstCol = col;
+        console.log(gFirstRow, gFirstCol)
+        var bombLoc = placeBombs();
+        nearBomb(bombLoc);
+        drawBoard();
+    } 
+
+    if (content.classList.contains("bomb") && gLives > 0){
+
+        console.log(gLives);
+        gLives--;
+        document.querySelector("#lives").innerHTML = "Lives:" + gLives;
+    }
+
+    if (content.classList.contains("bomb") && gLives == 0) {
+
+        button.classList.add("hidden");
+        content.classList.remove("hidden");
         revealBombsLose();
         document.querySelector("#reset").innerHTML = "😒";
         clearInterval(gTimer);
 
-    } else {
+    } else if (!(content.classList.contains("bomb"))){
+
+        button.classList.add("hidden");
+        content.classList.remove("hidden");
         gRevealCount++;
         winCondi();
     }
@@ -201,23 +247,27 @@ function changeDifficulty(select) {
     init();
 }
 
-function runTimer(){
-    console.log(new Date().getSeconds());
+function runTimer() {
+
     document.querySelector("#timer").innerHTML = parseInt((new Date().getTime() - gTimePointer.getTime()) / 1000);
 }
 
 function init() {
 
-    clearInterval(gTimer);
-    gTimePointer = new Date();
-    gTimer = setInterval('runTimer()', 500);
+    gLives = 3;
+    gFirstRow = -5;
+    gFirstCol = -5;
+    gFirstClick = 0;
+    gFirstFlag = 0;
+    gBoard = [];
     gBombFlagged = 0;
     gRevealCount = 0;
-    document.querySelector("#mainBoard").innerHTML = '';
-    var board = createBoard();
-    var bombLoc = placeBombs(board);
-    nearBomb(board, bombLoc);
-    drawBoard(board);
-    document.querySelector("#reset").innerHTML = "🙂";
 
+    clearInterval(gTimer);
+    document.querySelector("#timer").innerHTML = 0;
+    document.querySelector("#lives").innerHTML = "Lives:" +gLives;
+    document.querySelector("#mainBoard").innerHTML = '';
+    document.querySelector("#reset").innerHTML = "🙂";
+    createBoard();
+    drawBoard();
 }
